@@ -41,10 +41,10 @@ typedef struct
 
 char *shift_arg(int *argc, char** *argv);
 void usage(const char *program_size);
-enum Error add_todo(const char *todo_name);
-enum Error list_todos();
-enum Error load_todos(Todo_List *todo_list);
-enum Error save_todos(const Todo_List todo_list);
+enum Error add_todo(const char *filename, const char *todo_name);
+enum Error list_todos(const char *filename);
+enum Error load_todos(const char *filename, Todo_List *todo_list);
+enum Error save_todos(const char *filename, const Todo_List todo_list);
 
 
 char *shift_arg(int *argc, char** *argv)
@@ -66,7 +66,7 @@ void usage(const char *program_name)
     fprintf(stderr, "Usage: %s [-a | --add] | [-l | --list]\n", program_name);
 }
 
-enum Error load_todos(char *filename, Todo_List *todo_list)
+enum Error load_todos(const char *filename, Todo_List *todo_list)
 {
     FILE *file = fopen(filename, "rb");
     if (file == NULL)
@@ -95,9 +95,9 @@ enum Error load_todos(char *filename, Todo_List *todo_list)
     return ERROR_OK;
 }
 
-enum Error save_todos(char *filename, const Todo_List todo_list)
+enum Error save_todos(const char *filename, const Todo_List todo_list)
 {
-    FILE *file = fopen(DATA_FILE_NAME, "wb");
+    FILE *file = fopen(filename, "wb");
     if (file == NULL)
     {
         fprintf(stderr, "Failed to open todo file\n");
@@ -116,12 +116,12 @@ enum Error save_todos(char *filename, const Todo_List todo_list)
     return ERROR_OK;
 }
 
-enum Error add_todo(const char *todo_name)  // TODO make `add_todo` don't add todo if todo_name is dupulicated.
+enum Error add_todo(const char *filename, const char *todo_name)  // TODO make `add_todo` don't add todo if todo_name is dupulicated.
 {
 
     Todo_List todos = { 0 };
 
-    if (load_todos(&todos) != ERROR_OK) return ERROR_FAILED;
+    if (load_todos(filename, &todos) != ERROR_OK) return ERROR_FAILED;
 
     if (todos.count >= TASK_CAPACITY)
     {
@@ -134,7 +134,7 @@ enum Error add_todo(const char *todo_name)  // TODO make `add_todo` don't add to
     todos.data[todos.count].is_completed = 0;
     todos.count++;
 
-    if (save_todos(todos) != ERROR_OK)
+    if (save_todos(filename, todos) != ERROR_OK)
     {
         return ERROR_FAILED;
     }
@@ -142,10 +142,10 @@ enum Error add_todo(const char *todo_name)  // TODO make `add_todo` don't add to
     return ERROR_OK;
 }
 
-enum Error list_todos()
+enum Error list_todos(const char* filename)
 {
     Todo_List todos = { 0 };
-    if (load_todos(&todos) != ERROR_OK) return ERROR_FAILED;
+    if (load_todos(filename, &todos) != ERROR_OK) return ERROR_FAILED;
 
     for (size_t i=0; i < todos.count; i++)
     {
@@ -159,6 +159,7 @@ enum Error list_todos()
 
 int main(int argc, char** argv)
 {
+    const char *filename = "todo.bin";
     const char *program_name = shift_arg(&argc, &argv);
     if (argc == 0)
     {
@@ -169,29 +170,17 @@ int main(int argc, char** argv)
     
     while (argc > 0)
     {
-        char *flag = shift_arg(&argc, &argv);
-        if (strcmp(flag, "-l") == 0 || strcmp(flag, "--list") == 0)
-        {
-            if (list_todos() != ERROR_OK) return 1;
-        }
-        else if (strcmp(flag, "-a") == 0 || strcmp(flag, "--add") == 0)
-        {
-            if (argc == 0)
-            {
-                usage(program_name);
-                fprintf(stderr, "ERROR: todo name doesn't specified\n");
-                return 1;
-            }
-
-            const char *todo_name = shift_arg(&argc, &argv);
-            if (add_todo(todo_name) != ERROR_OK) return 1;
-        }
-        else
+        if (list_todos(filename) != ERROR_OK) return 1;
+    }
         {
             usage(program_name);
-            fprintf(stderr, "ERROR: unknown flag `%s`\n", flag);
+            fprintf(stderr, "ERROR: todo name doesn't specified\n");
             return 1;
         }
+
+        const char *todo_name = shift_arg(&argc, &argv);
+        if (add_todo(filename, todo_name) != ERROR_OK) return 1;
+    }
     }
 
     return 0;
