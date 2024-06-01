@@ -168,10 +168,14 @@ int main(int argc, char** argv)
         return 1;
     }
     
-    while (argc > 0)
+    char *subcommand_name = shift_arg(&argc, &argv);
+    if (strcmp(subcommand_name, "list") == 0)
     {
         if (list_todos(filename) != ERROR_OK) return 1;
     }
+    else if (strcmp(subcommand_name, "add") == 0)
+    {
+        if (argc == 0)
         {
             usage(program_name);
             fprintf(stderr, "ERROR: todo name doesn't specified\n");
@@ -181,6 +185,11 @@ int main(int argc, char** argv)
         const char *todo_name = shift_arg(&argc, &argv);
         if (add_todo(filename, todo_name) != ERROR_OK) return 1;
     }
+    else
+    {
+        usage(program_name);
+        fprintf(stderr, "ERROR: unknown subcommand `%s`\n", subcommand_name);
+        return 1;
     }
 
     return 0;
