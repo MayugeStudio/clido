@@ -1,13 +1,16 @@
-// TODO implement the way to concatenate error message
-// TODO make entire code use dynamic array instead of static
-//
-//  TODO make options subcommands
-//  TODO add complete subcommand
-//  TODO add uncomplete subcommand
-//  TODO add delete subcommand
-//  TODO add edit subcommand
-//  TODO add tag subcommand
-//  TODO add sub-todo to todo
+/*
+ * TODO add help option
+ * TODO add complete subcommand
+ * TODO add uncomplete subcommand
+ * TODO add marking todo as in progress subcommand
+ * TODO add delete subcommand
+ * TODO add edit subcommand
+ * TODO add tag subcommand
+ * TODO make options subcommands
+ * TODO add sub-todo to todo
+ * TODO implement the way to concatenate error message
+ * TODO make entire code use dynamic array instead of static
+*/
 
 #include <assert.h>
 #include <errno.h>
