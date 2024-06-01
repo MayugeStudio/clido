@@ -117,10 +117,7 @@ enum Error add_todo(const char *todo_name)  // TODO make `add_todo` don't add to
 
     Todo_List todos = { 0 };
 
-    if (load_todos(&todos) != ERROR_OK)
-    {
-        return ERROR_FAILED;
-    }
+    if (load_todos(&todos) != ERROR_OK) return ERROR_FAILED;
 
     if (todos.count >= TASK_CAPACITY)
     {
@@ -141,7 +138,7 @@ enum Error add_todo(const char *todo_name)  // TODO make `add_todo` don't add to
     return ERROR_OK;
 }
 
-enum Error list_todos() // 48
+enum Error list_todos()
 {
     Todo_List todos = { 0 };
     if (load_todos(&todos) != ERROR_OK) return ERROR_FAILED;
