@@ -83,6 +83,7 @@ enum Error load_todos(char *filename, Todo_List *todo_list)
     if (ferror(file))
     {
         fprintf(stderr, "Failed to read todo file\n");
+        fclose(file);
         return ERROR_FAILED;
     }
 
