@@ -64,6 +64,7 @@ void usage(const char *program_name)
 {
     printf("Usage: %s <subcommand> <args> <options>\n", program_name);
     printf("        add          Add todo\n");
+    printf("        delete       Delete todo\n");
     printf("        list         List todos\n");
     printf("        complete     Mark todo as complete\n");
     printf("        uncomplete   Mark todo as uncomplete\n");
