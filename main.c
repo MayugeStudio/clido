@@ -42,6 +42,7 @@ void usage(const char *program_size);
 enum Error add_todo(const char *filename, const char *todo_name);
 enum Error list_todos(const char *filename);
 enum Error complete_todo(const char* filename, const char *todo_name);
+enum Error uncomplete_todo(const char* filename, const char *todo_name);
 enum Error load_todos(const char *filename, Todo_List *todo_list);
 enum Error save_todos(const char *filename, const Todo_List todo_list);
 
@@ -176,6 +177,26 @@ enum Error complete_todo(const char *filename, const char *todo_name)
     return ERROR_FAILED;
 }
 
+enum Error uncomplete_todo(const char* filename, const char *todo_name)
+{
+    Todo_List todos = { 0 };
+    if (load_todos(filename, &todos) != ERROR_OK) return ERROR_FAILED;
+
+    for (size_t i=0; i<todos.count; i++)
+    {
+        if (strcmp(todos.data[i].name, todo_name) == 0)
+        {
+            todos.data[i].is_completed = 0;
+
+            if (save_todos(filename, todos) != ERROR_OK) return ERROR_FAILED;
+            return ERROR_OK;
+        }
+    }
+
+    fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
+    return ERROR_FAILED;
+}
+
 int main(int argc, char** argv)
 {
     const char *filename = "todo.bin";
@@ -221,6 +242,18 @@ int main(int argc, char** argv)
 
         const char *todo_name = shift_arg(&argc, &argv);
         if (complete_todo(filename, todo_name) != ERROR_OK) return 1;
+    }
+    else if (strcmp(subcommand_name, "uncomplete") == 0)
+    {
+        if (argc == 0)
+        {
+            usage(program_name);
+            fprintf(stderr, "ERROR: todo name doesn't specified\n");
+            return 1;
+        }
+
+        const char *todo_name = shift_arg(&argc, &argv);
+        if (uncomplete_todo(filename, todo_name) != ERROR_OK) return 1;
     }
     else
     {
