@@ -1,5 +1,4 @@
 /*
- * TODO add delete subcommand
  * TODO add edit subcommand
  * TODO add tag subcommand
  * TODO add sub-todo to todo
