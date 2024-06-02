@@ -1,10 +1,9 @@
 /*
- * TODO add marking todo as working in progress subcommand
  * TODO add delete subcommand
  * TODO add edit subcommand
  * TODO add tag subcommand
- * TODO make options subcommands
  * TODO add sub-todo to todo
+ * TODO add marking todo as working in progress subcommand
  * TODO implement the way to concatenate error message
  * TODO make entire code use dynamic array instead of static
 */
