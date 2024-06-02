@@ -51,7 +51,7 @@ char *shift_arg(int *argc, char** *argv)
 {
     if (*argc <= 0)
     {
-        fprintf(stderr, "No more arguments to shift\n");
+        fprintf(stderr, "No more arguments to shift\n");  // TODO Make this line need not to write here
         return NULL;
     }
 
@@ -85,7 +85,7 @@ enum Error load_todos(const char *filename, Todo_List *todo_list)
     size_t read_count = fread(todo_list->data, sizeof(Todo), TASK_CAPACITY, file);
     if (ferror(file))
     {
-        fprintf(stderr, "Failed to read todo file\n");
+        fprintf(stderr, "Failed to read todo file\n");  // TODO Make this line need not to write here
         fclose(file);
         return ERROR_FAILED;
     }
@@ -100,14 +100,14 @@ enum Error save_todos(const char *filename, const Todo_List todo_list)
     FILE *file = fopen(filename, "wb");
     if (file == NULL)
     {
-        fprintf(stderr, "Failed to open todo file\n");
+        fprintf(stderr, "Failed to open todo file\n");  // TODO Make this line need not to write here
         return ERROR_FAILED;
     }
 
     fwrite(todo_list.data, sizeof(Todo), todo_list.count, file);
 
     if (ferror(file)) {
-        fprintf(stderr, "Failed to write to todo file\n");
+        fprintf(stderr, "Failed to write to todo file\n");  // TODO Make this line need not to write here
         fclose(file);
         return ERROR_FAILED;
     }
@@ -125,7 +125,7 @@ enum Error add_todo(const char *filename, const char *todo_name)  // TODO make `
 
     if (todos.count >= TASK_CAPACITY)
     {
-        fprintf(stderr, "Todo capacity reached\n");
+        fprintf(stderr, "Todo capacity reached\n");  // TODO Make this line need not to write here
         return ERROR_FAILED;
     }
 
@@ -164,7 +164,7 @@ int main(int argc, char** argv)
     if (argc == 0)
     {
         usage(program_name);
-        fprintf(stderr, "ERROR: No arguments specified.\n");
+        fprintf(stderr, "ERROR: No arguments specified.\n");  // TODO Make this line need not to write here
         return 1;
     }
     
@@ -178,7 +178,7 @@ int main(int argc, char** argv)
         if (argc == 0)
         {
             usage(program_name);
-            fprintf(stderr, "ERROR: todo name doesn't specified\n");
+            fprintf(stderr, "ERROR: todo name doesn't specified\n");  // TODO Make this line need not to write here
             return 1;
         }
 
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
     else
     {
         usage(program_name);
-        fprintf(stderr, "ERROR: unknown subcommand `%s`\n", subcommand_name);
+        fprintf(stderr, "ERROR: unknown subcommand `%s`\n", subcommand_name);  // TODO Make this line need not to write here
         return 1;
     }
 
