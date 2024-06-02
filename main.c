@@ -1,6 +1,7 @@
 /*
  * TODO add edit subcommand
  * TODO add tag subcommand
+ * TODO add search todo function
  * TODO add sub-todo to todo
  * TODO add marking todo as working in progress subcommand
  * TODO implement the way to concatenate error message
