@@ -1,5 +1,4 @@
 /*
- * TODO add help option
  * TODO add complete subcommand
  * TODO add uncomplete subcommand
  * TODO add marking todo as in progress subcommand
@@ -169,6 +168,12 @@ int main(int argc, char** argv)
     }
     
     char *subcommand_name = shift_arg(&argc, &argv);
+    if (strcmp(subcommand_name, "--help") == 0 || strcmp(subcommand_name, "-h") == 0)
+    {
+        usage(program_name);
+        return 0;
+    }
+
     if (strcmp(subcommand_name, "list") == 0)
     {
         if (list_todos(filename) != ERROR_OK) return 1;
