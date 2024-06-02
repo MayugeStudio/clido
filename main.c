@@ -1,5 +1,4 @@
 /*
- * TODO add uncomplete subcommand
  * TODO add marking todo as working in progress subcommand
  * TODO add delete subcommand
  * TODO add edit subcommand
