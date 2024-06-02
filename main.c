@@ -1,7 +1,7 @@
 /*
  * TODO add complete subcommand
  * TODO add uncomplete subcommand
- * TODO add marking todo as in progress subcommand
+ * TODO add marking todo as working in progress subcommand
  * TODO add delete subcommand
  * TODO add edit subcommand
  * TODO add tag subcommand
