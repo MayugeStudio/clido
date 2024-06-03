@@ -59,12 +59,12 @@ char *shift_arg(int *argc, char** *argv)
 void usage(const char *program_name)
 {
     printf("Usage: %s <subcommand> <args> <options>\n", program_name);
-    printf("        add          Add todo\n");
-    printf("        delete       Delete todo\n");
-    printf("        edit         Edit todo name\n");
-    printf("        list         List todos\n");
-    printf("        complete     Mark todo as complete\n");
-    printf("        uncomplete   Mark todo as uncomplete\n");
+    printf("        add         <todo-name>   Add todo\n");
+    printf("        delete      <todo-name>   Delete todo\n");
+    printf("        edit        <todo-name>   Edit todo name\n");
+    printf("        list                      List todos\n");
+    printf("        complete    <todo-name>   Mark todo as complete\n");
+    printf("        uncomplete  <todo-name>   Mark todo as uncomplete\n");
 }
 
 enum Error load_todos(const char *filename, Todo_List *todo_list)
