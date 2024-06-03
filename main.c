@@ -36,6 +36,7 @@ char *shift_arg(int *argc, char** *argv);
 void usage(const char *program_size);
 enum Error add_todo(const char *filename, const char *todo_name);
 enum Error delete_todo(const char *filename, const char *todo_name);
+enum Error edit_todo(const char *filename, const char *old_name, const char *new_name);
 enum Error list_todos(const char *filename);
 enum Error complete_todo(const char* filename, const char *todo_name);
 enum Error uncomplete_todo(const char* filename, const char *todo_name);
@@ -158,6 +159,28 @@ enum Error delete_todo(const char *filename, const char *todo_name)
     return ERROR_FAILED;
 }
 
+enum Error edit_todo(const char *filename, const char *old_name, const char *new_name)
+{
+    if (strlen(new_name) >= MAX_TASK_NAME_LENGTH - 1) { return ERROR_FAILED; }
+
+    Todo_List todo_list = { 0 };
+
+    if (load_todos(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
+
+    for (size_t i=0; i<todo_list.count; i++) {
+        if (strcmp(todo_list.data[i].name, old_name) == 0) {
+            memset(todo_list.data[i].name, '\0', MAX_TASK_NAME_LENGTH);
+            strncpy(todo_list.data[i].name, new_name, MAX_TASK_NAME_LENGTH - 1);
+            todo_list.data[i].name[MAX_TASK_NAME_LENGTH-1] = '\0';  // ensure null-termination
+            if (save_todos(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
+            return ERROR_OK;
+        }
+    }
+
+    fprintf(stderr, "ERROR: The task named `%s` doesn't exist\n", old_name);
+    return ERROR_FAILED;
+}
+
 enum Error list_todos(const char* filename)
 {
     Todo_List todos = { 0 };
@@ -266,6 +289,23 @@ int main(int argc, char** argv)
 
         const char *todo_name = shift_arg(&argc, &argv);
         if (uncomplete_todo(filename, todo_name) != ERROR_OK) return 1;
+    }
+    else if (strcmp(subcommand_name, "edit") == 0) {
+        if (argc == 0) {
+            usage(program_name);
+            fprintf(stderr, "ERROR: old todo name doesn't specified\n");
+            return 1;
+        }
+
+        const char *old_name = shift_arg(&argc, &argv);
+        if (argc == 0) {
+            usage(program_name);
+            fprintf(stderr, "ERROR: new todo name doesn't specified\n");
+            return 1;
+        }
+        const char *new_name = shift_arg(&argc, &argv);
+
+        if (edit_todo(filename, old_name, new_name) != ERROR_OK) { return ERROR_FAILED; }
     }
     else {
         usage(program_name);
