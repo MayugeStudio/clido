@@ -115,6 +115,7 @@ enum Error save_todos(const char *filename, const Todo_List todo_list)
 
 enum Error add_todo(const char *filename, const char *todo_name)  // TODO make `add_todo` don't add todo if todo_name is dupulicated.
 {
+    if (strlen(todo_name) >= MAX_TASK_NAME_LENGTH-1) { return ERROR_FAILED; }
 
     Todo_List todos = { 0 };
 
