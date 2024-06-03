@@ -256,8 +256,7 @@ int main(int argc, char** argv)
 
         const char *todo_name = shift_arg(&argc, &argv);
         if (add_todo(filename, todo_name) != ERROR_OK) return 1;
-    }
-    else if (strcmp(subcommand_name, "delete") == 0) {
+    } else if (strcmp(subcommand_name, "delete") == 0) {
         if (argc == 0) {
             usage(program_name);
             fprintf(stderr, "ERROR: todo name doesn't specified\n");
@@ -266,11 +265,9 @@ int main(int argc, char** argv)
 
         const char *todo_name = shift_arg(&argc, &argv);
         if (delete_todo(filename, todo_name) != ERROR_OK) return 1;
-    }
-    else if (strcmp(subcommand_name, "list") == 0) {
+    } else if (strcmp(subcommand_name, "list") == 0) {
         if (list_todos(filename) != ERROR_OK) return 1;
-    }
-    else if (strcmp(subcommand_name, "complete") == 0) {
+    } else if (strcmp(subcommand_name, "complete") == 0) {
         if (argc == 0) {
             usage(program_name);
             fprintf(stderr, "ERROR: todo name doesn't specified\n");
@@ -279,8 +276,7 @@ int main(int argc, char** argv)
 
         const char *todo_name = shift_arg(&argc, &argv);
         if (complete_todo(filename, todo_name) != ERROR_OK) return 1;
-    }
-    else if (strcmp(subcommand_name, "uncomplete") == 0) {
+    } else if (strcmp(subcommand_name, "uncomplete") == 0) {
         if (argc == 0) {
             usage(program_name);
             fprintf(stderr, "ERROR: todo name doesn't specified\n");
@@ -289,8 +285,7 @@ int main(int argc, char** argv)
 
         const char *todo_name = shift_arg(&argc, &argv);
         if (uncomplete_todo(filename, todo_name) != ERROR_OK) return 1;
-    }
-    else if (strcmp(subcommand_name, "edit") == 0) {
+    } else if (strcmp(subcommand_name, "edit") == 0) {
         if (argc == 0) {
             usage(program_name);
             fprintf(stderr, "ERROR: old todo name doesn't specified\n");
@@ -306,8 +301,7 @@ int main(int argc, char** argv)
         const char *new_name = shift_arg(&argc, &argv);
 
         if (edit_todo(filename, old_name, new_name) != ERROR_OK) { return ERROR_FAILED; }
-    }
-    else {
+    } else {
         usage(program_name);
         fprintf(stderr, "ERROR: unknown subcommand `%s`\n", subcommand_name);  // TODO Make this line need not to write here
         return 1;
