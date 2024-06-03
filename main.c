@@ -3,6 +3,7 @@
  * TODO add search todo function
  * TODO add sub-todo to todo
  * TODO add marking todo as working in progress subcommand
+ * TODO implement error collector
  * TODO implement the way to concatenate error message
  * TODO make entire code use dynamic array instead of static
 */
@@ -36,11 +37,11 @@ void usage(const char *program_size);
 enum Error add_todo(const char *filename, const char *todo_name);
 enum Error delete_todo(const char *filename, const char *todo_name);
 enum Error edit_todo(const char *filename, const char *old_name, const char *new_name);
-enum Error list_todos(const char *filename);
+enum Error list_todo(const char *filename);
 enum Error complete_todo(const char* filename, const char *todo_name);
 enum Error uncomplete_todo(const char* filename, const char *todo_name);
-enum Error load_todos(const char *filename, Todo_List *todo_list);
-enum Error save_todos(const char *filename, const Todo_List todo_list);
+enum Error load_todo_list(const char *filename, Todo_List *todo_list);
+enum Error save_todo_list(const char *filename, const Todo_List todo_list);
 
 
 char *shift_arg(int *argc, char** *argv)
@@ -62,12 +63,12 @@ void usage(const char *program_name)
     printf("        add         <todo-name>             Add todo\n");
     printf("        delete      <todo-name>             Delete todo\n");
     printf("        edit        <old-name> <new-name>   Edit todo name\n");
-    printf("        list                                List todos\n");
+    printf("        list                                List todo\n");
     printf("        complete    <todo-name>             Mark todo as complete\n");
     printf("        uncomplete  <todo-name>             Mark todo as uncomplete\n");
 }
 
-enum Error load_todos(const char *filename, Todo_List *todo_list)
+enum Error load_todo_list(const char *filename, Todo_List *todo_list)
 {
     FILE *file = fopen(filename, "rb");
     if (file == NULL) {
@@ -93,7 +94,7 @@ enum Error load_todos(const char *filename, Todo_List *todo_list)
     return ERROR_OK;
 }
 
-enum Error save_todos(const char *filename, const Todo_List todo_list)
+enum Error save_todo_list(const char *filename, const Todo_List todo_list)
 {
     FILE *file = fopen(filename, "wb");
     if (file == NULL) {
@@ -117,21 +118,21 @@ enum Error add_todo(const char *filename, const char *todo_name)  // TODO make `
 {
     if (strlen(todo_name) >= MAX_TASK_NAME_LENGTH-1) { return ERROR_FAILED; }
 
-    Todo_List todos = { 0 };
+    Todo_List todo_list = { 0 };
 
-    if (load_todos(filename, &todos) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    if (todos.count >= TASK_CAPACITY) {
+    if (todo_list.count >= TASK_CAPACITY) {
         fprintf(stderr, "Todo capacity reached\n");  // TODO Make this line need not to write here
         return ERROR_FAILED;
     }
 
-    strncpy(todos.data[todos.count].name, todo_name, MAX_TASK_NAME_LENGTH - 1);
-    todos.data[todos.count].name[MAX_TASK_NAME_LENGTH - 1] = '\0';  // Ensure null-termination
-    todos.data[todos.count].is_completed = 0;
-    todos.count++;
+    strncpy(todo_list.data[todo_list.count].name, todo_name, MAX_TASK_NAME_LENGTH - 1);
+    todo_list.data[todo_list.count].name[MAX_TASK_NAME_LENGTH - 1] = '\0';  // Ensure null-termination
+    todo_list.data[todo_list.count].is_completed = 0;
+    todo_list.count++;
 
-    if (save_todos(filename, todos) != ERROR_OK) {
+    if (save_todo_list(filename, todo_list) != ERROR_OK) {
         return ERROR_FAILED;
     }
 
@@ -140,17 +141,17 @@ enum Error add_todo(const char *filename, const char *todo_name)  // TODO make `
 
 enum Error delete_todo(const char *filename, const char *todo_name)
 {
-    Todo_List todos = { 0 };
+    Todo_List todo_list = { 0 };
 
-    if (load_todos(filename, &todos) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    for (size_t i=0; i<todos.count; i++) {
-        if (strcmp(todos.data[i].name, todo_name) == 0) {
-            for (size_t j=i; j<todos.count-1; j++) {
-                todos.data[j] = todos.data[j + 1];
+    for (size_t i=0; i<todo_list.count; i++) {
+        if (strcmp(todo_list.data[i].name, todo_name) == 0) {
+            for (size_t j=i; j<todo_list.count-1; j++) {
+                todo_list.data[j] = todo_list.data[j + 1];
             }
-            todos.count--;
-            if (save_todos(filename, todos) != ERROR_OK) return ERROR_FAILED;
+            todo_list.count--;
+            if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
             return ERROR_OK;
         }
     }
@@ -165,14 +166,14 @@ enum Error edit_todo(const char *filename, const char *old_name, const char *new
 
     Todo_List todo_list = { 0 };
 
-    if (load_todos(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
     for (size_t i=0; i<todo_list.count; i++) {
         if (strcmp(todo_list.data[i].name, old_name) == 0) {
             memset(todo_list.data[i].name, '\0', MAX_TASK_NAME_LENGTH);
             strncpy(todo_list.data[i].name, new_name, MAX_TASK_NAME_LENGTH - 1);
             todo_list.data[i].name[MAX_TASK_NAME_LENGTH-1] = '\0';  // ensure null-termination
-            if (save_todos(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
+            if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
             return ERROR_OK;
         }
     }
@@ -181,14 +182,14 @@ enum Error edit_todo(const char *filename, const char *old_name, const char *new
     return ERROR_FAILED;
 }
 
-enum Error list_todos(const char* filename)
+enum Error list_todo(const char* filename)
 {
-    Todo_List todos = { 0 };
+    Todo_List todo_list = { 0 };
 
-    if (load_todos(filename, &todos) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    for (size_t i=0; i < todos.count; i++) {
-        Todo todo = todos.data[i];
+    for (size_t i=0; i < todo_list.count; i++) {
+        Todo todo = todo_list.data[i];
         char complete_mark = todo.is_completed ? 'x' : ' ';
         printf("%zu: %s [%c]\n", i+1, todo.name, complete_mark); 
     }
@@ -197,14 +198,14 @@ enum Error list_todos(const char* filename)
 }
 
 enum Error complete_todo(const char *filename, const char *todo_name) {
-    Todo_List todos = { 0 };
-    if (load_todos(filename, &todos) != ERROR_OK) return ERROR_FAILED;
+    Todo_List todo_list = { 0 };
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    for (size_t i=0; i < todos.count; i++) {
-        if (strcmp(todos.data[i].name, todo_name) == 0) {
-            todos.data[i].is_completed = 1;
+    for (size_t i=0; i < todo_list.count; i++) {
+        if (strcmp(todo_list.data[i].name, todo_name) == 0) {
+            todo_list.data[i].is_completed = 1;
 
-            if (save_todos(filename, todos) != ERROR_OK) return ERROR_FAILED;
+            if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
             return ERROR_OK;
         }
     }
@@ -215,14 +216,14 @@ enum Error complete_todo(const char *filename, const char *todo_name) {
 
 enum Error uncomplete_todo(const char* filename, const char *todo_name)
 {
-    Todo_List todos = { 0 };
-    if (load_todos(filename, &todos) != ERROR_OK) return ERROR_FAILED;
+    Todo_List todo_list = { 0 };
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    for (size_t i=0; i<todos.count; i++) {
-        if (strcmp(todos.data[i].name, todo_name) == 0) {
-            todos.data[i].is_completed = 0;
+    for (size_t i=0; i<todo_list.count; i++) {
+        if (strcmp(todo_list.data[i].name, todo_name) == 0) {
+            todo_list.data[i].is_completed = 0;
 
-            if (save_todos(filename, todos) != ERROR_OK) return ERROR_FAILED;
+            if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
             return ERROR_OK;
         }
     }
@@ -266,7 +267,7 @@ int main(int argc, char** argv)
         const char *todo_name = shift_arg(&argc, &argv);
         if (delete_todo(filename, todo_name) != ERROR_OK) return 1;
     } else if (strcmp(subcommand_name, "list") == 0) {
-        if (list_todos(filename) != ERROR_OK) return 1;
+        if (list_todo(filename) != ERROR_OK) return 1;
     } else if (strcmp(subcommand_name, "complete") == 0) {
         if (argc == 0) {
             usage(program_name);
