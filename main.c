@@ -124,11 +124,15 @@ Error save_todo_list(const char *filename, const struct Todo_List todo_list)
 
 Error add_todo(const char *filename, const char *todo_name)  // TODO make `add_todo` don't add todo if todo_name is dupulicated.
 {
-    if (strlen(todo_name) >= MAX_TASK_NAME_LENGTH-1) { return ERROR_FAILED; }
+    if (strlen(todo_name) >= MAX_TASK_NAME_LENGTH-1) {
+        return ERROR_FAILED;
+    }
 
     struct Todo_List todo_list = { 0 };
 
-    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
 
     if (todo_list.count >= TASK_CAPACITY) {
         fprintf(stderr, "Todo capacity reached\n");  // TODO Make this line need not to write here
@@ -151,7 +155,9 @@ Error delete_todo(const char *filename, const char *todo_name)
 {
     struct Todo_List todo_list = { 0 };
 
-    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
 
     int target_todo_index = find_todo_index_by_name(&todo_list, todo_name);
     if (target_todo_index == -1) {
@@ -165,18 +171,24 @@ Error delete_todo(const char *filename, const char *todo_name)
     }
 
     todo_list.count--;
-    if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
+    if (save_todo_list(filename, todo_list) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
 
     return ERROR_OK;
 }
 
 Error edit_todo(const char *filename, const char *old_name, const char *new_name)
 {
-    if (strlen(new_name) >= MAX_TASK_NAME_LENGTH - 1) { return ERROR_FAILED; }
+    if (strlen(new_name) >= MAX_TASK_NAME_LENGTH - 1) {
+        return ERROR_FAILED;
+    }
 
     struct Todo_List todo_list = { 0 };
 
-    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
 
     struct Todo *target_todo = find_todo_by_name(&todo_list, old_name);
     if (target_todo == NULL) {
@@ -186,7 +198,10 @@ Error edit_todo(const char *filename, const char *old_name, const char *new_name
     memset(target_todo, '\0', MAX_TASK_NAME_LENGTH);
     strncpy(target_todo->name, new_name, MAX_TASK_NAME_LENGTH - 1);
     target_todo->name[MAX_TASK_NAME_LENGTH-1] = '\0';  // ensure null-termination
-    if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
+
+    if (save_todo_list(filename, todo_list) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
 
     return ERROR_OK;
 }
@@ -195,7 +210,9 @@ Error list_todo(const char* filename)
 {
     struct Todo_List todo_list = { 0 };
 
-    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
 
     for (size_t i=0; i < todo_list.count; i++) {
         struct Todo todo = todo_list.data[i];
@@ -211,7 +228,9 @@ Error change_todo_status(const char *filename, const char *todo_name, int status
     assert(status == 0 || status == 1);
 
     struct Todo_List todo_list = { 0 };
-    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
+    if (load_todo_list(filename, &todo_list) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
 
     struct Todo *target_todo = find_todo_by_name(&todo_list, todo_name);
     if (target_todo == NULL) {
@@ -220,9 +239,11 @@ Error change_todo_status(const char *filename, const char *todo_name, int status
 
     target_todo->is_completed = status;
 
-    if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
-    return ERROR_OK;
+    if (save_todo_list(filename, todo_list) != ERROR_OK) { 
+        return ERROR_FAILED;
+    }
 
+    return ERROR_OK;
 }
 
 
@@ -270,7 +291,9 @@ int main(int argc, char** argv)
         }
 
         const char *todo_name = shift_arg(&argc, &argv);
-        if (add_todo(filename, todo_name) != ERROR_OK) return 1;
+        if (add_todo(filename, todo_name) != ERROR_OK) {
+            return 1;
+        }
     } else if (strcmp(subcommand_name, "delete") == 0) {
         if (argc == 0) {
             usage(program_name);
@@ -330,6 +353,7 @@ int main(int argc, char** argv)
         if (edit_todo(filename, old_name, new_name) != ERROR_OK) {
             return 1;
         }
+
     } else {
         usage(program_name);
         fprintf(stderr, "ERROR: unknown subcommand `%s`\n", subcommand_name);  // TODO Make this line need not to write here
