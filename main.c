@@ -41,8 +41,7 @@ Error add_todo(const char *filename, const char *todo_name);
 Error delete_todo(const char *filename, const char *todo_name);
 Error edit_todo(const char *filename, const char *old_name, const char *new_name);
 Error list_todo(const char *filename);
-Error complete_todo(const char* filename, const char *todo_name);
-Error uncomplete_todo(const char* filename, const char *todo_name);
+Error change_todo_status(const char *filename, const char *todo_name, int status);
 
 // File IO Utility Functions
 Error load_todo_list(const char *filename, struct Todo_List *todo_list);
@@ -206,23 +205,10 @@ Error list_todo(const char* filename)
     return ERROR_OK;
 }
 
-Error complete_todo(const char *filename, const char *todo_name) {
-    struct Todo_List todo_list = { 0 };
-    if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
-
-    struct Todo *target_todo = find_todo_by_name(&todo_list, todo_name);
-    if (target_todo == NULL) {
-        fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
-    }
-
-    target_todo->is_completed = 1;
-
-    if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
-    return ERROR_OK;
-}
-
-Error uncomplete_todo(const char* filename, const char *todo_name)
+Error change_todo_status(const char *filename, const char *todo_name, int status)
 {
+    assert(status == 0 || status == 1);
+
     struct Todo_List todo_list = { 0 };
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
@@ -231,11 +217,13 @@ Error uncomplete_todo(const char* filename, const char *todo_name)
         fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
     }
 
-    target_todo->is_completed = 0;
+    target_todo->is_completed = status;
 
     if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
     return ERROR_OK;
+
 }
+
 
 struct Todo *find_todo_by_name(struct Todo_List *todo_list, const char *todo_name)
 {
@@ -301,7 +289,7 @@ int main(int argc, char** argv)
         }
 
         const char *todo_name = shift_arg(&argc, &argv);
-        if (complete_todo(filename, todo_name) != ERROR_OK) return 1;
+        if (change_todo_status(filename, todo_name, 1) != ERROR_OK) return 1;
     } else if (strcmp(subcommand_name, "uncomplete") == 0) {
         if (argc == 0) {
             usage(program_name);
@@ -310,7 +298,7 @@ int main(int argc, char** argv)
         }
 
         const char *todo_name = shift_arg(&argc, &argv);
-        if (uncomplete_todo(filename, todo_name) != ERROR_OK) return 1;
+        if (change_todo_status(filename, todo_name, 0) != ERROR_OK) return 1;
     } else if (strcmp(subcommand_name, "edit") == 0) {
         if (argc == 0) {
             usage(program_name);
