@@ -1,6 +1,7 @@
 /*
  * TODO add tag subcommand
- * TODO add search todo function
+ * TODO add command struct
+ * TODO delete one line code 
  * TODO add sub-todo to todo
  * TODO add marking todo as working in progress subcommand
  * TODO implement error collector
