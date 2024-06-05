@@ -32,17 +32,25 @@ struct Todo_List {
     size_t count;
 };
 
+// CLI Utility Functions
 char *shift_arg(int *argc, char** *argv);
 void usage(const char *program_size);
+
+// Command Functions
 Error add_todo(const char *filename, const char *todo_name);
 Error delete_todo(const char *filename, const char *todo_name);
 Error edit_todo(const char *filename, const char *old_name, const char *new_name);
 Error list_todo(const char *filename);
 Error complete_todo(const char* filename, const char *todo_name);
 Error uncomplete_todo(const char* filename, const char *todo_name);
+
+// File IO Utility Functions
 Error load_todo_list(const char *filename, struct Todo_List *todo_list);
 Error save_todo_list(const char *filename, const struct Todo_List todo_list);
 
+// Todo Utility Functions
+struct Todo *find_todo_by_name(struct Todo_List *todo_list, const char *todo_name);
+int find_todo_index_by_name(struct Todo_List *todo_list, const char *todo_name);
 
 char *shift_arg(int *argc, char** *argv)
 {
@@ -145,19 +153,21 @@ Error delete_todo(const char *filename, const char *todo_name)
 
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    for (size_t i=0; i<todo_list.count; i++) {
-        if (strcmp(todo_list.data[i].name, todo_name) == 0) {
-            for (size_t j=i; j<todo_list.count-1; j++) {
-                todo_list.data[j] = todo_list.data[j + 1];
-            }
-            todo_list.count--;
-            if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
-            return ERROR_OK;
-        }
+    int target_todo_index = find_todo_index_by_name(&todo_list, todo_name);
+    if (target_todo_index == -1) {
+        fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
+        return ERROR_FAILED;
     }
 
-    fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
-    return ERROR_FAILED;
+    // shift all todo right except target_todo
+    for (size_t i=target_todo_index; i<todo_list.count-1; i++) {
+        todo_list.data[i] = todo_list.data[i+1];
+    }
+
+    todo_list.count--;
+    if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
+
+    return ERROR_OK;
 }
 
 Error edit_todo(const char *filename, const char *old_name, const char *new_name)
@@ -168,18 +178,17 @@ Error edit_todo(const char *filename, const char *old_name, const char *new_name
 
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    for (size_t i=0; i<todo_list.count; i++) {
-        if (strcmp(todo_list.data[i].name, old_name) == 0) {
-            memset(todo_list.data[i].name, '\0', MAX_TASK_NAME_LENGTH);
-            strncpy(todo_list.data[i].name, new_name, MAX_TASK_NAME_LENGTH - 1);
-            todo_list.data[i].name[MAX_TASK_NAME_LENGTH-1] = '\0';  // ensure null-termination
-            if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
-            return ERROR_OK;
-        }
+    struct Todo *target_todo = find_todo_by_name(&todo_list, old_name);
+    if (target_todo == NULL) {
+        fprintf(stderr, "ERROR: The task named `%s` doesn't exist\n", old_name);
     }
 
-    fprintf(stderr, "ERROR: The task named `%s` doesn't exist\n", old_name);
-    return ERROR_FAILED;
+    memset(target_todo, '\0', MAX_TASK_NAME_LENGTH);
+    strncpy(target_todo->name, new_name, MAX_TASK_NAME_LENGTH - 1);
+    target_todo->name[MAX_TASK_NAME_LENGTH-1] = '\0';  // ensure null-termination
+    if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
+
+    return ERROR_OK;
 }
 
 Error list_todo(const char* filename)
@@ -201,17 +210,15 @@ Error complete_todo(const char *filename, const char *todo_name) {
     struct Todo_List todo_list = { 0 };
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    for (size_t i=0; i < todo_list.count; i++) {
-        if (strcmp(todo_list.data[i].name, todo_name) == 0) {
-            todo_list.data[i].is_completed = 1;
-
-            if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
-            return ERROR_OK;
-        }
+    struct Todo *target_todo = find_todo_by_name(&todo_list, todo_name);
+    if (target_todo == NULL) {
+        fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
     }
 
-    fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
-    return ERROR_FAILED;
+    target_todo->is_completed = 1;
+
+    if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
+    return ERROR_OK;
 }
 
 Error uncomplete_todo(const char* filename, const char *todo_name)
@@ -219,17 +226,35 @@ Error uncomplete_todo(const char* filename, const char *todo_name)
     struct Todo_List todo_list = { 0 };
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
-    for (size_t i=0; i<todo_list.count; i++) {
-        if (strcmp(todo_list.data[i].name, todo_name) == 0) {
-            todo_list.data[i].is_completed = 0;
-
-            if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
-            return ERROR_OK;
-        }
+    struct Todo *target_todo = find_todo_by_name(&todo_list, todo_name);
+    if (target_todo == NULL) {
+        fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
     }
 
-    fprintf(stderr, "ERROR: The task named `%s` doesn't exist", todo_name);
-    return ERROR_FAILED;
+    target_todo->is_completed = 0;
+
+    if (save_todo_list(filename, todo_list) != ERROR_OK) return ERROR_FAILED;
+    return ERROR_OK;
+}
+
+struct Todo *find_todo_by_name(struct Todo_List *todo_list, const char *todo_name)
+{
+    for (size_t i=0; i<todo_list->count; i++) {
+        if (strcmp(todo_list->data[i].name, todo_name) == 0) {
+            return &todo_list->data[i];
+        }
+    }
+    return NULL;
+}
+
+int find_todo_index_by_name(struct Todo_List *todo_list, const char *todo_name)
+{
+    for (size_t i=0; i<todo_list->count; i++) {
+        if (strcmp(todo_list->data[i].name, todo_name) == 0) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 int main(int argc, char** argv)
