@@ -16,6 +16,8 @@
 #define MAX_TASK_NAME_LENGTH 32  // 2 ^ 5
 #define MAX_TASK_FILE_LENGTH 128 * 32  // 2 ^ 12
 
+#define SUBCOMMAND_CAPACITY 20
+
 typedef enum {
     ERROR_OK,
     ERROR_FAILED, // TODO Add more Errors e.g. ERR_TOO_LONG_TASKNAME, ERR_FAILED_TO_READ_FILE ...
@@ -33,7 +35,7 @@ struct Todo_List {
 
 // CLI Utility Functions
 char *shift_arg(int *argc, char** *argv);
-void usage(const char *program_size);
+void usage();
 
 // Command Functions
 Error add_todo(const char *filename, const char *todo_name);
@@ -50,6 +52,28 @@ Error save_todo_list(const char *filename, const struct Todo_List todo_list);
 struct Todo *find_todo_by_name(struct Todo_List *todo_list, const char *todo_name);
 int find_todo_index_by_name(struct Todo_List *todo_list, const char *todo_name);
 
+
+struct Command {
+    const char *name;
+    Error (*func)(const char *filename, int argc, char **argv);
+};
+
+// Add and Delete
+Error add_command(const char *filename, int argc, char **argv);
+Error delete_command(const char *filename, int argc, char **argv);
+
+// Change status or name
+Error edit_command(const char *filename, int argc, char **argv);
+Error complete_command(const char *filename, int argc, char **argv);
+Error uncomplete_command(const char *filename, int argc, char **argv);
+
+// Visualize
+Error list_command(const char *filename, int argc, char **argv);
+
+// Utility
+struct Command* find_command(struct Command commands[], const char *command_name);
+
+
 char *shift_arg(int *argc, char** *argv)
 {
     if (*argc <= 0) {
@@ -63,9 +87,9 @@ char *shift_arg(int *argc, char** *argv)
     return result;
 }
 
-void usage(const char *program_name)
+void usage()
 {
-    printf("Usage: %s <subcommand> <args> <options>\n", program_name);
+    printf("Usage: clido <subcommand> <args> <options>\n");
     printf("        add         <todo-name>             Add todo\n");
     printf("        delete      <todo-name>             Delete todo\n");
     printf("        edit        <old-name> <new-name>   Edit todo name\n");
@@ -265,96 +289,163 @@ int find_todo_index_by_name(struct Todo_List *todo_list, const char *todo_name)
     return -1;
 }
 
+
+Error add_command(const char *filename, int argc, char **argv) {
+    if (argc == 0) {
+        usage();
+        fprintf(stderr, "ERROR: todo name doesn't specified\n");
+        return ERROR_FAILED;
+    }
+
+    const char *todo_name = shift_arg(&argc, &argv);
+    if (add_todo(filename, todo_name) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
+    
+    return ERROR_OK;
+}
+
+Error delete_command(const char *filename, int argc, char **argv) {
+    if (argc == 0) {
+        usage();
+        fprintf(stderr, "ERROR: todo name doesn't specified\n");
+        return ERROR_FAILED;
+    }
+
+    const char *todo_name = shift_arg(&argc, &argv);
+    if (delete_todo(filename, todo_name) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
+
+    return ERROR_OK;
+}
+
+Error edit_command(const char *filename, int argc, char **argv) {
+    if (argc == 0) {
+        usage();
+        fprintf(stderr, "ERROR: old todo name doesn't specified\n");
+        return ERROR_FAILED;
+    }
+    const char *old_name = shift_arg(&argc, &argv);
+
+    if (argc == 0) {
+        usage();
+        fprintf(stderr, "ERROR: new todo name doesn't specified\n");
+        return ERROR_FAILED;
+    }
+    const char *new_name = shift_arg(&argc, &argv);
+
+    if (edit_todo(filename, old_name, new_name) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
+
+    return ERROR_OK;
+}
+
+Error complete_command(const char *filename, int argc, char **argv) {
+    if (argc == 0) {
+        usage();
+        fprintf(stderr, "ERROR: todo name doesn't specified\n");
+        return ERROR_FAILED;
+    }
+
+    const char *todo_name = shift_arg(&argc, &argv);
+    if (change_todo_status(filename, todo_name, 1) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
+
+    return ERROR_OK;
+}
+
+Error uncomplete_command(const char *filename, int argc, char **argv) {
+    if (argc == 0) {
+        usage();
+        fprintf(stderr, "ERROR: todo name doesn't specified\n");
+        return ERROR_FAILED;
+    }
+
+    const char *todo_name = shift_arg(&argc, &argv);
+    if (change_todo_status(filename, todo_name, 0) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
+
+    return ERROR_OK;
+}
+
+Error list_command(const char *filename, int argc, char **argv) {
+    (void) argc;
+    (void) argv;
+
+    if (list_todo(filename) != ERROR_OK) {
+        return ERROR_FAILED;
+    }
+
+    return ERROR_OK;
+}
+
+struct Command* find_command(struct Command commands[], const char *command_name) {
+    for (size_t i=0; i < SUBCOMMAND_CAPACITY; i++) {
+        if (strcmp(commands[i].name, command_name) == 0) {
+            return &commands[i];
+        }
+    }
+
+    return NULL;
+}
+
+struct Command subcommands[SUBCOMMAND_CAPACITY] = {
+    {
+        .name = "add",
+        .func = add_command,
+    },
+    { 
+        .name = "delete",
+        .func = delete_command,
+    },
+    { 
+        .name = "edit",
+        .func = edit_command,
+    },
+    { 
+        .name = "complete",
+        .func = complete_command,
+    },
+    { 
+        .name = "uncomplete",
+        .func = uncomplete_command,
+    },
+    { 
+        .name = "list",
+        .func = list_command,
+    },
+};
+
+const char *filename = "todo.bin";
+
 int main(int argc, char** argv)
 {
-    const char *filename = "todo.bin";
-    const char *program_name = shift_arg(&argc, &argv);
+    shift_arg(&argc, &argv);  // Skip program name
     if (argc == 0) {
-        usage(program_name);
+        usage();
         fprintf(stderr, "ERROR: No arguments specified.\n");  // TODO Make this line need not to write here
         return 1;
     }
     
     char *subcommand_name = shift_arg(&argc, &argv);
     if (strcmp(subcommand_name, "--help") == 0 || strcmp(subcommand_name, "-h") == 0) {
-        usage(program_name);
+        usage();
         return 0;
     }
+    
+    struct Command *subcommand = find_command(subcommands, subcommand_name);
+    if (subcommand == NULL) {
+        usage();
+        fprintf(stderr, "ERROR: unknown subcommand `%s`\n", subcommand_name);
+        return 1;
+    }
 
-    if (strcmp(subcommand_name, "add") == 0) {
-        if (argc == 0) {
-            usage(program_name);
-            fprintf(stderr, "ERROR: todo name doesn't specified\n");  // TODO Make this line need not to write here
-            return 1;
-        }
-
-        const char *todo_name = shift_arg(&argc, &argv);
-        if (add_todo(filename, todo_name) != ERROR_OK) {
-            return 1;
-        }
-    } else if (strcmp(subcommand_name, "delete") == 0) {
-        if (argc == 0) {
-            usage(program_name);
-            fprintf(stderr, "ERROR: todo name doesn't specified\n");
-            return 1;
-        }
-
-        const char *todo_name = shift_arg(&argc, &argv);
-        if (delete_todo(filename, todo_name) != ERROR_OK) {
-            return 1;
-        }
-
-    } else if (strcmp(subcommand_name, "list") == 0) {
-        if (list_todo(filename) != ERROR_OK) {
-            return 1;
-        }
-
-    } else if (strcmp(subcommand_name, "complete") == 0) {
-        if (argc == 0) {
-            usage(program_name);
-            fprintf(stderr, "ERROR: todo name doesn't specified\n");
-            return 1;
-        }
-
-        const char *todo_name = shift_arg(&argc, &argv);
-        if (change_todo_status(filename, todo_name, 1) != ERROR_OK) {
-            return 1;
-        }
-
-    } else if (strcmp(subcommand_name, "uncomplete") == 0) {
-        if (argc == 0) {
-            usage(program_name);
-            fprintf(stderr, "ERROR: todo name doesn't specified\n");
-            return 1;
-        }
-
-        const char *todo_name = shift_arg(&argc, &argv);
-        if (change_todo_status(filename, todo_name, 0) != ERROR_OK) {
-            return 1;
-        }
-
-    } else if (strcmp(subcommand_name, "edit") == 0) {
-        if (argc == 0) {
-            usage(program_name);
-            fprintf(stderr, "ERROR: old todo name doesn't specified\n");
-            return 1;
-        }
-
-        const char *old_name = shift_arg(&argc, &argv);
-        if (argc == 0) {
-            usage(program_name);
-            fprintf(stderr, "ERROR: new todo name doesn't specified\n");
-            return 1;
-        }
-        const char *new_name = shift_arg(&argc, &argv);
-
-        if (edit_todo(filename, old_name, new_name) != ERROR_OK) {
-            return 1;
-        }
-
-    } else {
-        usage(program_name);
-        fprintf(stderr, "ERROR: unknown subcommand `%s`\n", subcommand_name);  // TODO Make this line need not to write here
+    Error result = subcommand->func(filename, argc, argv);
+    if (result != ERROR_OK) {
         return 1;
     }
 
