@@ -278,9 +278,15 @@ int main(int argc, char** argv)
         }
 
         const char *todo_name = shift_arg(&argc, &argv);
-        if (delete_todo(filename, todo_name) != ERROR_OK) return 1;
+        if (delete_todo(filename, todo_name) != ERROR_OK) {
+            return 1;
+        }
+
     } else if (strcmp(subcommand_name, "list") == 0) {
-        if (list_todo(filename) != ERROR_OK) return 1;
+        if (list_todo(filename) != ERROR_OK) {
+            return 1;
+        }
+
     } else if (strcmp(subcommand_name, "complete") == 0) {
         if (argc == 0) {
             usage(program_name);
@@ -289,7 +295,10 @@ int main(int argc, char** argv)
         }
 
         const char *todo_name = shift_arg(&argc, &argv);
-        if (change_todo_status(filename, todo_name, 1) != ERROR_OK) return 1;
+        if (change_todo_status(filename, todo_name, 1) != ERROR_OK) {
+            return 1;
+        }
+
     } else if (strcmp(subcommand_name, "uncomplete") == 0) {
         if (argc == 0) {
             usage(program_name);
@@ -298,7 +307,10 @@ int main(int argc, char** argv)
         }
 
         const char *todo_name = shift_arg(&argc, &argv);
-        if (change_todo_status(filename, todo_name, 0) != ERROR_OK) return 1;
+        if (change_todo_status(filename, todo_name, 0) != ERROR_OK) {
+            return 1;
+        }
+
     } else if (strcmp(subcommand_name, "edit") == 0) {
         if (argc == 0) {
             usage(program_name);
@@ -314,7 +326,9 @@ int main(int argc, char** argv)
         }
         const char *new_name = shift_arg(&argc, &argv);
 
-        if (edit_todo(filename, old_name, new_name) != ERROR_OK) { return ERROR_FAILED; }
+        if (edit_todo(filename, old_name, new_name) != ERROR_OK) {
+            return 1;
+        }
     } else {
         usage(program_name);
         fprintf(stderr, "ERROR: unknown subcommand `%s`\n", subcommand_name);  // TODO Make this line need not to write here
