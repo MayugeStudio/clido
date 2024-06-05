@@ -22,15 +22,15 @@ typedef enum {
     ERROR_FAILED, // TODO Add more Errors e.g. ERR_TOO_LONG_TASKNAME, ERR_FAILED_TO_READ_FILE ...
 } Error;
 
-typedef struct {
+struct Todo {
     char name[MAX_TASK_NAME_LENGTH];
     int is_completed;  // 0 = not completed, 1 = completed
-} Todo;
+};
 
-typedef struct {
-    Todo data[TASK_CAPACITY];
+struct Todo_List {
+    struct Todo data[TASK_CAPACITY];
     size_t count;
-} Todo_List;
+};
 
 char *shift_arg(int *argc, char** *argv);
 void usage(const char *program_size);
@@ -40,8 +40,8 @@ Error edit_todo(const char *filename, const char *old_name, const char *new_name
 Error list_todo(const char *filename);
 Error complete_todo(const char* filename, const char *todo_name);
 Error uncomplete_todo(const char* filename, const char *todo_name);
-Error load_todo_list(const char *filename, Todo_List *todo_list);
-Error save_todo_list(const char *filename, const Todo_List todo_list);
+Error load_todo_list(const char *filename, struct Todo_List *todo_list);
+Error save_todo_list(const char *filename, const struct Todo_List todo_list);
 
 
 char *shift_arg(int *argc, char** *argv)
@@ -68,7 +68,7 @@ void usage(const char *program_name)
     printf("        uncomplete  <todo-name>             Mark todo as uncomplete\n");
 }
 
-Error load_todo_list(const char *filename, Todo_List *todo_list)
+Error load_todo_list(const char *filename, struct Todo_List *todo_list)
 {
     FILE *file = fopen(filename, "rb");
     if (file == NULL) {
@@ -82,7 +82,7 @@ Error load_todo_list(const char *filename, Todo_List *todo_list)
         return ERROR_FAILED;
     }
 
-    size_t read_count = fread(todo_list->data, sizeof(Todo), TASK_CAPACITY, file);
+    size_t read_count = fread(todo_list->data, sizeof(struct Todo), TASK_CAPACITY, file);
     if (ferror(file)) {
         fprintf(stderr, "Failed to read todo file\n");  // TODO Make this line need not to write here
         fclose(file);
@@ -94,7 +94,7 @@ Error load_todo_list(const char *filename, Todo_List *todo_list)
     return ERROR_OK;
 }
 
-Error save_todo_list(const char *filename, const Todo_List todo_list)
+Error save_todo_list(const char *filename, const struct Todo_List todo_list)
 {
     FILE *file = fopen(filename, "wb");
     if (file == NULL) {
@@ -102,7 +102,7 @@ Error save_todo_list(const char *filename, const Todo_List todo_list)
         return ERROR_FAILED;
     }
 
-    fwrite(todo_list.data, sizeof(Todo), todo_list.count, file);
+    fwrite(todo_list.data, sizeof(struct Todo), todo_list.count, file);
 
     if (ferror(file)) {
         fprintf(stderr, "Failed to write to todo file\n");  // TODO Make this line need not to write here
@@ -118,7 +118,7 @@ Error add_todo(const char *filename, const char *todo_name)  // TODO make `add_t
 {
     if (strlen(todo_name) >= MAX_TASK_NAME_LENGTH-1) { return ERROR_FAILED; }
 
-    Todo_List todo_list = { 0 };
+    struct Todo_List todo_list = { 0 };
 
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
@@ -141,7 +141,7 @@ Error add_todo(const char *filename, const char *todo_name)  // TODO make `add_t
 
 Error delete_todo(const char *filename, const char *todo_name)
 {
-    Todo_List todo_list = { 0 };
+    struct Todo_List todo_list = { 0 };
 
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
@@ -164,7 +164,7 @@ Error edit_todo(const char *filename, const char *old_name, const char *new_name
 {
     if (strlen(new_name) >= MAX_TASK_NAME_LENGTH - 1) { return ERROR_FAILED; }
 
-    Todo_List todo_list = { 0 };
+    struct Todo_List todo_list = { 0 };
 
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
@@ -184,12 +184,12 @@ Error edit_todo(const char *filename, const char *old_name, const char *new_name
 
 Error list_todo(const char* filename)
 {
-    Todo_List todo_list = { 0 };
+    struct Todo_List todo_list = { 0 };
 
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
     for (size_t i=0; i < todo_list.count; i++) {
-        Todo todo = todo_list.data[i];
+        struct Todo todo = todo_list.data[i];
         char complete_mark = todo.is_completed ? 'x' : ' ';
         printf("%zu: %s [%c]\n", i+1, todo.name, complete_mark); 
     }
@@ -198,7 +198,7 @@ Error list_todo(const char* filename)
 }
 
 Error complete_todo(const char *filename, const char *todo_name) {
-    Todo_List todo_list = { 0 };
+    struct Todo_List todo_list = { 0 };
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
     for (size_t i=0; i < todo_list.count; i++) {
@@ -216,7 +216,7 @@ Error complete_todo(const char *filename, const char *todo_name) {
 
 Error uncomplete_todo(const char* filename, const char *todo_name)
 {
-    Todo_List todo_list = { 0 };
+    struct Todo_List todo_list = { 0 };
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
     for (size_t i=0; i<todo_list.count; i++) {
