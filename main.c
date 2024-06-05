@@ -17,10 +17,10 @@
 #define MAX_TASK_NAME_LENGTH 32  // 2 ^ 5
 #define MAX_TASK_FILE_LENGTH 128 * 32  // 2 ^ 12
 
-enum Error {
+typedef enum {
     ERROR_OK,
     ERROR_FAILED, // TODO Add more Errors e.g. ERR_TOO_LONG_TASKNAME, ERR_FAILED_TO_READ_FILE ...
-};
+} Error;
 
 typedef struct {
     char name[MAX_TASK_NAME_LENGTH];
@@ -34,14 +34,14 @@ typedef struct {
 
 char *shift_arg(int *argc, char** *argv);
 void usage(const char *program_size);
-enum Error add_todo(const char *filename, const char *todo_name);
-enum Error delete_todo(const char *filename, const char *todo_name);
-enum Error edit_todo(const char *filename, const char *old_name, const char *new_name);
-enum Error list_todo(const char *filename);
-enum Error complete_todo(const char* filename, const char *todo_name);
-enum Error uncomplete_todo(const char* filename, const char *todo_name);
-enum Error load_todo_list(const char *filename, Todo_List *todo_list);
-enum Error save_todo_list(const char *filename, const Todo_List todo_list);
+Error add_todo(const char *filename, const char *todo_name);
+Error delete_todo(const char *filename, const char *todo_name);
+Error edit_todo(const char *filename, const char *old_name, const char *new_name);
+Error list_todo(const char *filename);
+Error complete_todo(const char* filename, const char *todo_name);
+Error uncomplete_todo(const char* filename, const char *todo_name);
+Error load_todo_list(const char *filename, Todo_List *todo_list);
+Error save_todo_list(const char *filename, const Todo_List todo_list);
 
 
 char *shift_arg(int *argc, char** *argv)
@@ -68,7 +68,7 @@ void usage(const char *program_name)
     printf("        uncomplete  <todo-name>             Mark todo as uncomplete\n");
 }
 
-enum Error load_todo_list(const char *filename, Todo_List *todo_list)
+Error load_todo_list(const char *filename, Todo_List *todo_list)
 {
     FILE *file = fopen(filename, "rb");
     if (file == NULL) {
@@ -94,7 +94,7 @@ enum Error load_todo_list(const char *filename, Todo_List *todo_list)
     return ERROR_OK;
 }
 
-enum Error save_todo_list(const char *filename, const Todo_List todo_list)
+Error save_todo_list(const char *filename, const Todo_List todo_list)
 {
     FILE *file = fopen(filename, "wb");
     if (file == NULL) {
@@ -114,7 +114,7 @@ enum Error save_todo_list(const char *filename, const Todo_List todo_list)
     return ERROR_OK;
 }
 
-enum Error add_todo(const char *filename, const char *todo_name)  // TODO make `add_todo` don't add todo if todo_name is dupulicated.
+Error add_todo(const char *filename, const char *todo_name)  // TODO make `add_todo` don't add todo if todo_name is dupulicated.
 {
     if (strlen(todo_name) >= MAX_TASK_NAME_LENGTH-1) { return ERROR_FAILED; }
 
@@ -139,7 +139,7 @@ enum Error add_todo(const char *filename, const char *todo_name)  // TODO make `
     return ERROR_OK;
 }
 
-enum Error delete_todo(const char *filename, const char *todo_name)
+Error delete_todo(const char *filename, const char *todo_name)
 {
     Todo_List todo_list = { 0 };
 
@@ -160,7 +160,7 @@ enum Error delete_todo(const char *filename, const char *todo_name)
     return ERROR_FAILED;
 }
 
-enum Error edit_todo(const char *filename, const char *old_name, const char *new_name)
+Error edit_todo(const char *filename, const char *old_name, const char *new_name)
 {
     if (strlen(new_name) >= MAX_TASK_NAME_LENGTH - 1) { return ERROR_FAILED; }
 
@@ -182,7 +182,7 @@ enum Error edit_todo(const char *filename, const char *old_name, const char *new
     return ERROR_FAILED;
 }
 
-enum Error list_todo(const char* filename)
+Error list_todo(const char* filename)
 {
     Todo_List todo_list = { 0 };
 
@@ -197,7 +197,7 @@ enum Error list_todo(const char* filename)
     return ERROR_OK;
 }
 
-enum Error complete_todo(const char *filename, const char *todo_name) {
+Error complete_todo(const char *filename, const char *todo_name) {
     Todo_List todo_list = { 0 };
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
 
@@ -214,7 +214,7 @@ enum Error complete_todo(const char *filename, const char *todo_name) {
     return ERROR_FAILED;
 }
 
-enum Error uncomplete_todo(const char* filename, const char *todo_name)
+Error uncomplete_todo(const char* filename, const char *todo_name)
 {
     Todo_List todo_list = { 0 };
     if (load_todo_list(filename, &todo_list) != ERROR_OK) return ERROR_FAILED;
